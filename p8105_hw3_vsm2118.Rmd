@@ -1,0 +1,203 @@
+---
+title: "HW 2 Data Science"
+author: "Victoria Mello (vsm2118)"
+date: "October 4, 2023"
+output: github_document
+---
+
+# Promblem 1
+
+```{r}
+library(tidyverse)
+```
+
+Clean and tidy the datasets: 
+
+```{r clean_538_pols}
+month_df = 
+  tibble(
+    month_num = 1:12,
+    month_abb = month.abb,
+    month = month.name)
+
+pols = 
+  read_csv("./data/pols-month.csv") |>
+  separate(mon, into = c("year", "month_num", "day"), convert = TRUE) |>
+  mutate(
+    president = recode(prez_gop, "0" = "dem", "1" = "gop", "2" = "gop")) |>
+  left_join(x = _, y = month_df) |> 
+  select(year, month, everything(), -day, -starts_with("prez")) 
+```
+
+```{r clean_538_snp}
+snp = 
+  read_csv("./data/snp.csv") |>
+  separate(date, into = c("month", "day", "year"), convert = TRUE) |>
+  arrange(year, month) |>
+  mutate(month = month.name[month]) |>
+  select(year, month, close) 
+```
+
+```{r clean_538_unemp}
+unemployment = 
+  read_csv("./data/unemployment.csv") |>
+  rename(year = Year) |>
+  pivot_longer(
+    Jan:Dec, 
+    names_to = "month_abb",
+    values_to = "unemployment"
+  ) |> 
+  left_join(x = _, y = month_df) |> 
+  select(year, month, unemployment)
+```
+
+Merge the three datasets:
+
+```{r merge_538}
+data_538 = 
+  left_join(pols, snp) |>
+  left_join(x = _, y = unemployment)
+
+str(data_538)
+```
+
+The `pols` data has `r nrow(pols)` observations and `r ncol(pols)` variables and tells us about the party affiliation distribution (democrat or republican) for governors and senators for a given year from years `r range(pols$year)[1]` to `r range(pols$year)[2]`. It also tells us whether the sitting president was a democrat or republican. The `snp` data has `r nrow(snp)` observations and `r ncol(snp)` variables, ranging from years `r range(snp$year)[1]` to `r range(snp$year)[2]`. The `unemployment` data has `r nrow(unemployment)` observations and `r ncol(unemployment)` variables ranging from years `r range(unemployment$year)[1]` to `r range(unemployment$year)[2]`. In Januarys in or after 1975 in which a democrat was president, the **average unemployment rate was `r filter(data_538, month == "January", year >= 1975, president == "dem") |> pull(unemployment) |> mean() |> round(2)`**.  The average unemployment rate over the same time period in which a republican was president was `r filter(data_538, month == "January", year >= 1975, president == "gop") |> pull(unemployment) |> mean() |> round(2)`.
+
+
+# Problem 2
+
+```{r}
+
+# Step 1: Read and clean the Mr. Trash Wheel dataset
+mr_trash_wheel <- readxl::read_excel("./trashwheel.xlsx", sheet = "Mr. Trash Wheel", range = "A2:N586") %>%
+  janitor::clean_names() %>%
+ mutate(homes_powered=(
+    (weight_tons*500)/30),
+    year = as.integer(year),
+    trash_data = "mr_tw") 
+
+view(mr_trash_wheel)
+
+# Step 2: Import, clean, and organize data for Professor Trash Wheel
+professor_trash_wheel <- readxl::read_excel("./trashwheel.xlsx", sheet = "Professor Trash Wheel", range = "A2:M108") %>%
+   janitor::clean_names() %>% 
+mutate(homes_powered=(
+    (weight_tons*500)/30),
+    year = as.integer(year),
+    trash_data = "professor_tw")
+
+view(professor_trash_wheel)
+
+# Step 3: Import, clean, and organize data for Gwynnda
+gwynnda <- readxl::read_excel("./trashwheel.xlsx", sheet = "Gwynnda Trash Wheel", range = "A2:L157") %>%
+  janitor::clean_names() %>% 
+mutate(homes_powered=(
+    (weight_tons*500)/30),
+    year = as.integer(year),
+    trash_data = "gwynnda_tw")
+
+view(gwynnda)
+
+gwynnda_july_2021 =
+  gwynnda %>% 
+  filter(month == "July") %>% 
+  filter(year == "2021")
+```
+
+```{r}
+# Step 4: Combine the datasets
+combined_data <- bind_rows(mr_trash_wheel, professor_trash_wheel, gwynnda) %>% 
+  janitor::clean_names()
+view(combined_data)
+```
+
+The collection of Mr. Trash Wheel datasets contains information about a water-wheel vessel that removes trash from the Inner Harbor in Baltimore, Maryland. This dataset combines data from Mr. Trash Wheel, Professor Trash Wheel, and Gwynnda and has `r nrow(combined_data)` observations and `r ncol(combined_data)` variables. The dataset contains information from the years `r range(combined_data$year)[1]` to `r range(combined_data$year)[2]` and includes key variables such as weight of trash collected in tons, number of cigarette butts, and homes powered where each ton of trash equates to on average 500 kilowatts of electricity. For available data, the total weight of trash collected by Professor Trash Wheel is `r sum(pull(professor_trash_wheel, weight_tons))` and the total number of cigarette butts collected by Gwynnda in July of 2021 is `r sum(pull(gwynnda_july_2021, cigarette_butts))`.
+
+
+# Problem 3
+
+```{r}
+
+# Read the dataset
+mci_baseline = read_csv("./data_mci/MCI_baseline.csv", skip = 1) %>% 
+    janitor::clean_names() 
+
+mci_baseline_clean =
+  mci_baseline %>% 
+  mutate(sex = recode(sex, `1` = "male", `0`="female")) %>% 
+  mutate(apoe4 = recode(apoe4, `1`="carrier", `0`="non-carrier")) %>% 
+  filter(age_at_onset > current_age | age_at_onset == ".") 
+
+mci_apoe_c =
+  mci_baseline_clean %>% 
+  filter(sex == "female") %>% 
+  filter(apoe4 == "carrier") %>% 
+  mutate(apoe4 = recode(apoe4, "carrier" = 1))
+  
+mci_apoe_nc =
+  mci_baseline_clean %>% 
+  filter(sex == "female") %>% 
+  filter(apoe4 == "non-carrier") %>% 
+   mutate(apoe4 = recode(apoe4, "non-carrier" = 1))
+
+```
+
+The import process utilizes the read_csv() function to import the data so that it can be cleaned and manipulated accordingly. Key features of this data set include patient ID number, sex, APOE4 gene carrier status, and age of MCI onset for participants. There were originally 483 participants recruited and `r nrow(mci_baseline_clean)` of these participants were MCI free at baseline. The average baseline age is `r mean(pull(mci_baseline, current_age))` years old. `r (((sum(pull(mci_apoe_c, apoe4)))/((sum(pull(mci_apoe_nc, apoe4)))+(sum(pull(mci_apoe_c, apoe4)))))*100)` percent of women in the study are APOE4 carriers. 
+ 
+ 
+```{r}
+# Reading in and cleaning the biomarker dataset
+mci_amyloid =
+  read_csv("./data_mci/mci_amyloid.csv", skip = 1) %>% 
+  janitor::clean_names() %>% 
+  rename("time_0" = baseline) %>%  
+  rename("id" = study_id) %>% 
+  pivot_longer(
+    time_0:time_8,
+    names_to = "time",
+    values_to = "amyloid_value") 
+ 
+mci_amyloid_dimensions <- dim(mci_amyloid)
+num_rows <- mci_amyloid_dimensions[1]
+num_columns <- mci_amyloid_dimensions[2]
+variables <- colnames(mci_amyloid)
+```
+
+To import this data set the csv file for the mci_amyloid data was read in with read_csv by utilizing its relative path name. The key features of this data set include patient ID number, and the time elapsed since the study baseline to the visit where the biomarker Amyloid ratio was measured at baseline as well as years 2, 4, 6, and 8. In cleaning the data set, individuals with missing values were removed and the column name of participant IDs was changed from “study_id” to “id” to match the “id” column name in the baseline data. The mci_amyloid dataset has `r num_rows` rows and `r num_columns` columns. The variables present in the dataset are `r paste(variables, collapse = ", ")`. The dataset has been reshaped from wide to long format, with the "time" column representing the time points and the "amyloid_value" column representing the corresponding amyloid values.
+
+```{r}
+mci_unique =
+  anti_join(mci_baseline_clean, mci_amyloid, by = "id")
+
+num_unique_participants <- nrow(mci_unique)
+unique_participants_summary <- mci_unique %>%
+  summarise(
+    num_females = sum(sex == "female"),
+    num_males = sum(sex == "male"),
+    num_carriers = sum(apoe4 == "carrier"),
+    num_non_carriers = sum(apoe4 == "non-carrier"),
+    num_with_age_at_onset = sum(age_at_onset != ".")
+  )
+
+```
+
+There are `r num_unique_participants` participants who appear in the mci_baseline_clean dataset but not in the mci_amyloid dataset. Among these participants, `r unique_participants_summary$num_females` are female and `r unique_participants_summary$num_males` are male. `r unique_participants_summary$num_carriers` of them are APOE4 carriers, while `r unique_participants_summary$num_non_carriers` are non-carriers. `r unique_participants_summary$num_with_age_at_onset` of these participants have age at onset information available.
+
+```{r}
+mci_combine =
+  inner_join(mci_baseline_clean, mci_amyloid, by = "id")
+
+mci_combine_dimensions <- dim(mci_combine)
+num_rows_combine <- mci_combine_dimensions[1]
+num_columns_combine <- mci_combine_dimensions[2]
+variables_combine <- colnames(mci_combine)
+
+```
+
+The mci_combine dataset, created by performing an inner join on the mci_baseline_clean and mci_amyloid datasets, has `r num_rows_combine` rows and `r num_columns_combine` columns. The variables present in the dataset are `r paste(variables_combine, collapse = ", ")`. This dataset contains the demographic and biomarker information for participants that appear in both the mci_baseline_clean and mci_amyloid datasets.
+
+```{r}
+# Export the result as a CSV
+write_csv(mci_combine, "./data_mci/mci_combine.csv")
+
+```
