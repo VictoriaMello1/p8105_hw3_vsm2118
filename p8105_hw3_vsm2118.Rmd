@@ -98,11 +98,11 @@ instacart |>
 
 ## Problem 2
 
+
 Data Cleaning
 ```{r}
 data("brfss_smart2010")
 
-variable.names(brfss_smart2010)
 # Data cleaning
 brfss_data_cleaned <- brfss_smart2010 %>%
     janitor::clean_names() %>% 
@@ -111,7 +111,7 @@ brfss_data_cleaned <- brfss_smart2010 %>%
     rename(state = locationabbr) %>% 
     mutate(response = factor(response, levels = c("Poor", "Fair", "Good", "Very Good", "Excellent"), ordered = TRUE))
 
-view(brfss_data_cleaned)
+variable.names(brfss_data_cleaned)
 ```
 
 In 2002 and 2010, which states were observed at 7 or more locations?
@@ -130,7 +130,8 @@ states_2010 <- brfss_data_cleaned %>%
   filter(year == 2010) %>%
   group_by(state) %>%
   summarize(count = n()) %>%
-  filter(count >= 7)
+  filter(count >= 7) %>%
+  arrange(desc(count))
 
 knitr::kable(states_2002, caption =  "States with 7 or more observations in 2002", format = "markdown")
 knitr::kable(states_2010, caption =  "States with 7 or more observations in 2010", format = "markdown")
@@ -142,6 +143,46 @@ In 2002 a total of 36 states were observed at 7 or more locations. The states ob
 
 Dataset limited to Excellent responses and a spaghetti plot:
 ```{r}
+
+excellent_data <- brfss_data_cleaned %>%
+  filter(response == "Excellent")
+
+# Step 2: Group the data by state and year
+excellent_grouped <- excellent_data %>%
+  group_by(state, year)
+
+# Step 3: Calculate the average data value within each state and year
+excellent_avg <- excellent_grouped %>%
+  summarize(avg_data_value = mean(data_value))
+
+# Step 4: Create a spaghetti plot
+ggplot(excellent_avg, aes(x = year, y = avg_data_value, group = state, color = state)) +
+  geom_line() +
+  labs(title = "Average Data Value Over Time (Excellent Responses) by State",
+       x = "Year",
+       y = "Average Data Value") +
+  theme_minimal()
+
+```
+
+# Comment on the spaghetti plot
+
+Two-panel plot showing the distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State in the years 2006 and 2010:
+```{r}
+# Step 1: Filter the data to include only the specified years and New York State
+ny_data <- brfss_data_cleaned %>%
+  filter(state == "NY" & year %in% c(2006, 2010) & response %in% c("Poor", "Fair", "Good", "Very Good", "Excellent"))
+
+# Step 2: Create a two-panel plot with grouped bar plots
+ggplot(ny_data, aes(x = response, y = data_value, fill = response)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~year, ncol = 2) +
+  labs(title = "Distribution of Data Value by Response in New York State (2006 and 2010)",
+       x = "Response",
+       y = "Data Value",
+       fill = "Response") +
+  scale_fill_manual(values = c("Poor" = "red", "Fair" = "orange", "Good" = "yellow", "Very Good" = "lightgreen", "Excellent" = "darkgreen")) +
+  theme_minimal()
 
 ```
 
