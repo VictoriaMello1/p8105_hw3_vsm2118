@@ -95,3 +95,53 @@ instacart |>
     values_from = mean_hour) |>
   knitr::kable(digits = 2)
 ```
+
+## Problem 2
+
+Data Cleaning
+```{r}
+data("brfss_smart2010")
+
+variable.names(brfss_smart2010)
+# Data cleaning
+brfss_data_cleaned <- brfss_smart2010 %>%
+    janitor::clean_names() %>% 
+    filter(topic == "Overall Health") %>%
+    filter(response %in% c("Excellent", "Very Good", "Good", "Fair", "Poor")) %>%
+    rename(state = locationabbr) %>% 
+    mutate(response = factor(response, levels = c("Poor", "Fair", "Good", "Very Good", "Excellent"), ordered = TRUE))
+
+view(brfss_data_cleaned)
+```
+
+In 2002 and 2010, which states were observed at 7 or more locations?
+```{r}
+
+# States observed at 7 or more locations in 2002
+states_2002 <- brfss_data_cleaned %>%
+  filter(year == 2002) %>%
+  group_by(state) %>%
+  summarize(count = n()) %>%
+  filter(count >= 7) %>%
+  arrange(desc(count))
+
+# States observed at 7 or more locations in 2010
+states_2010 <- brfss_data_cleaned %>%
+  filter(year == 2010) %>%
+  group_by(state) %>%
+  summarize(count = n()) %>%
+  filter(count >= 7)
+
+knitr::kable(states_2002, caption =  "States with 7 or more observations in 2002", format = "markdown")
+knitr::kable(states_2010, caption =  "States with 7 or more observations in 2010", format = "markdown")
+
+```
+
+In 2002 a total of 36 states were observed at 7 or more locations. The states observed at the most locations in 2002 were PA with 40, followed by MA and NJ both having 32. By 2010, the total number of states observed at 7 or more locations increased to 45. The states observed at the most locations in 2010 were FL with 164, followed by NJ with 76, and TX with 64 locations.
+
+
+Dataset limited to Excellent responses and a spaghetti plot:
+```{r}
+
+```
+
