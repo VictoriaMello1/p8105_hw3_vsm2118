@@ -234,7 +234,6 @@ demographics <- demographics %>%
     sex == 1 ~ "Male",
     sex == 2 ~ "Female"
   ))
-
 view(demographics)
 
 # Tidy accelerometer data -- FIX THIS !!!
@@ -253,6 +252,37 @@ merged_data <- demographics %>%
   inner_join(reshaped_accelerometer, by = "seqn")
 
 view(merged_data)
-
 ```
 
+
+Table for the number of men and women in each education category, and a visualization of age distributions for men and women across education categories:
+```{r}
+# Create sex v education table
+education_summary <- merged_data %>%
+  group_by(education, sex) %>%
+  summarize(
+    count = n()
+  ) %>%
+  ungroup() 
+
+# Bar chart depicting table 
+education_summary %>%
+  ggplot(aes(x = education, y = count, fill = sex)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Number of Men and Women in Each Education Category", x = "Education Category", y = "Count") +
+  theme_minimal()
+
+# Create a histogram for age distributions by gender and education category
+age_distribution_plot <- merged_data %>%
+  ggplot(aes(x = age, fill = sex)) +
+  geom_histogram(binwidth = 5, position = "dodge") +
+  facet_grid(sex ~ education) +
+  labs(title = "Age Distributions by Gender and Education Category", x = "Age", y = "Count") +
+  theme_minimal()
+
+# View the table and plots
+education_summary
+age_distribution_plot
+```
+
+ -- COMMENT On table and plot 
