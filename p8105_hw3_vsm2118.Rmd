@@ -284,5 +284,27 @@ age_distribution_plot <- merged_data %>%
 education_summary
 age_distribution_plot
 ```
-
  -- COMMENT On table and plot 
+
+
+```{r}
+
+# Aggregate total activity for each participant
+total_activity <- merged_data %>%
+  group_by(seqn, age, sex, education) %>%
+  summarise(total_activity = sum(activity_level))
+
+# Plot total activity by age, gender, and education level
+total_activity <- ggplot(total_activity, aes(x = age, y = total_activity)) +
+  geom_point(aes(color = sex)) +
+  facet_wrap(~education) +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  labs(title = "Total Activity by Age, Gender, and Education Level",
+       x = "Age",
+       y = "Total Activity",
+       color = "Gender") +
+  theme_minimal()
+
+total_activity
+```
+
