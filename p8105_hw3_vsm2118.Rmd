@@ -168,39 +168,21 @@ Two-panel scatterplot showing the distribution of data_value for responses (“P
 ny_data <- brfss_data_cleaned %>%
   filter(state == "NY" & year %in% c(2006, 2010) & response %in% c("Poor", "Fair", "Good", "Very Good", "Excellent"))
 
-# Create the first plot: scatter plot of data_value vs. response for 2006
-ny_data_2006 <- ny_data %>%
-  filter(year == 2006)
+custom_colors <- c("NY - Bronx County" = "black", "NY - Erie County" = "blue", "NY - Kings County" = "green", "NY - Monroe County" = "purple", "NY - New York County" = "orange",
+                   "NY - Nassau County" = "cyan", "NY - Queens County" = "brown", "NY - Suffolk County" = "yellow", "NY - Westchester County" = "pink")
 
-plot_2006 <- ggplot(ny_data_2006, aes(x = response, y = data_value, color = locationdesc, size = data_value)) +
-  geom_point(alpha = 0.5) +
-  scale_color_discrete(name = "Location") +
+# Create the scatter plot for 2006 and 2010 and facet by year
+plot_combined <- ggplot(ny_data, aes(x = response, y = data_value, color = locationdesc, size = data_value)) +
+  geom_point(alpha = 0.4) +
+  scale_color_manual(values = custom_colors) +  # Use the custom color palette
   scale_size_continuous(range = c(1, 10)) +
-  labs(title = "Distribution of Data Value by Location in New York State (2006)",
+  labs(title = "Distribution of Data Value by Location in New York State",
        x = "Response",
        y = "Data Value",
        color = "Location",
        size = "Data Value") +
-  theme_minimal()
-
-# Create the second plot: scatter plot of data_value vs. response for 2010
-ny_data_2010 <- ny_data %>%
-  filter(year == 2010)
-
-plot_2010 <- ggplot(ny_data_2010, aes(x = response, y = data_value, color = locationdesc, size = data_value)) +
-  geom_point(alpha = 0.5) +
-  scale_color_discrete(name = "Location") +
-  scale_size_continuous(range = c(1, 10)) +
-  labs(title = "Distribution of Data Value by Location in New York State (2010)",
-       x = "Response",
-       y = "Data Value",
-       color = "Location",
-       size = "Data Value") +
-  theme_minimal() 
-
-# Combine the two plots into a single multipanel plot
-plot_combined <- plot_2006 + plot_2010
-
+  theme_minimal() +
+  facet_grid(year ~ .)
 plot_combined
 ```
 As seen in the two panel scatterplot showing the distribution of data_value for responses (“Poor” to “Excellent”) among counties in NY State for the years 2006 and 2010, the "Good" response option to the question "How is your general health?" was the most common response, followed by "Excellent", "Fair", and "Poor" in both years. Data from 2010 has information on a greater number of NY counties than the 2006 dataset does, including information for these additional counties: Bronx, Erie, and Monroe counties. 
