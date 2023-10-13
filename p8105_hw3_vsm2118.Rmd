@@ -288,7 +288,6 @@ age_distribution_plot
 
 
 ```{r}
-
 # Aggregate total activity for each participant
 total_activity <- merged_data %>%
   group_by(seqn, age, sex, education) %>%
@@ -306,5 +305,27 @@ total_activity <- ggplot(total_activity, aes(x = age, y = total_activity)) +
   theme_minimal()
 
 total_activity
+```
+
+
+```{r}
+# Aggregate the data to an hourly level
+hourly_data <- merged_data %>%
+  group_by(education, sex, hour = minute %/% 60) %>%
+  summarize(activity_level = mean(activity_level)) 
+
+# Create the 24-hour activity time course plot
+activity_plot <- hourly_data %>%
+  ggplot(aes(x = hour, y = activity_level, color = sex)) +
+  geom_line() +
+  facet_wrap(~education) +  # 3 panels, one for each education level
+  labs(title = "24-Hour Activity Time Courses by Education Level",
+       x = "Hour of the Day",
+       y = "Activity Level",
+       color = "Gender") +
+  scale_x_continuous(breaks = 0:24) +  # Set breaks for 0 to 24 (military time)
+  theme_minimal() 
+
+activity_plot
 ```
 
