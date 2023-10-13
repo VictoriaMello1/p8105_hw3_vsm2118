@@ -201,9 +201,7 @@ plot_2010 <- ggplot(ny_data_2010, aes(x = response, y = data_value, color = loca
 # Combine the two plots into a single multipanel plot
 plot_combined <- plot_2006 + plot_2010
 
-ggsave("combined_plot.png", plot_combined, width = 12, height = 6, units = "in")
-knitr::include_graphics("combined_plot.png")
-
+plot_combined
 ```
 As seen in the two panel scatterplot showing the distribution of data_value for responses (“Poor” to “Excellent”) among counties in NY State for the years 2006 and 2010, the "Good" response option to the question "How is your general health?" was the most common response, followed by "Excellent", "Fair", and "Poor" in both years. Data from 2010 has information on a greater number of NY counties than the 2006 dataset does, including information for these additional counties: Bronx, Erie, and Monroe counties. 
 #### Finish comment with which NY counties had highest vs lowest general health in each year
@@ -287,6 +285,7 @@ age_distribution_plot
  -- COMMENT On table and plot 
 
 
+Plot of total activity by age, sex, and education level:
 ```{r}
 # Aggregate total activity for each participant
 total_activity <- merged_data %>%
@@ -306,8 +305,10 @@ total_activity <- ggplot(total_activity, aes(x = age, y = total_activity)) +
 
 total_activity
 ```
+-- COMMENT on results
 
 
+Three-panel plot that shows the 24-hour activity time courses for each education level and by sex:
 ```{r}
 # Aggregate the data to an hourly level
 hourly_data <- merged_data %>%
@@ -328,4 +329,4 @@ activity_plot <- hourly_data %>%
 
 activity_plot
 ```
-
+-- COMMENT on results
