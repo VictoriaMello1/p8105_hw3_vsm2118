@@ -172,17 +172,16 @@ custom_colors <- c("NY - Bronx County" = "black", "NY - Erie County" = "blue", "
                    "NY - Nassau County" = "cyan", "NY - Queens County" = "brown", "NY - Suffolk County" = "yellow", "NY - Westchester County" = "pink")
 
 # Create the scatter plot for 2006 and 2010 and facet by year
-plot_combined <- ggplot(ny_data, aes(x = response, y = data_value, color = locationdesc, size = data_value)) +
-  geom_point(alpha = 0.4) +
+plot_combined <- ggplot(ny_data, aes(x = response, y = data_value, color = locationdesc)) +
+  geom_point(size = 3, alpha = 0.6, position = position_jitter(w = 0.2, h = 0)) +  # Adjust size and jitter
   scale_color_manual(values = custom_colors) +  # Use the custom color palette
-  scale_size_continuous(range = c(1, 10)) +
   labs(title = "Distribution of Data Value by Location in New York State",
        x = "Response",
        y = "Data Value",
-       color = "Location",
-       size = "Data Value") +
+       color = "Location") +
   theme_minimal() +
   facet_grid(year ~ .)
+
 plot_combined
 ```
 As seen in the two panel scatterplot showing the distribution of data_value for responses (“Poor” to “Excellent”) among counties in NY State for the years 2006 and 2010, the "Good" response option to the question "How is your general health?" was the most common response, followed by "Excellent", "Fair", and "Poor" in both years. Data from 2010 has information on a greater number of NY counties than the 2006 dataset does, including information for these additional counties: Bronx, Erie, and Monroe counties. 
@@ -308,7 +307,8 @@ activity_plot <- hourly_data %>%
        color = "Gender") +
   scale_x_continuous(breaks = 0:24) +  # Set breaks for 0 to 24 (military time)
   theme_minimal() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom",
+        axis.text.x = element_text(size = 8))
 
 activity_plot
 ```
