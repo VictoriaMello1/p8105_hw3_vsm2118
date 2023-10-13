@@ -307,7 +307,8 @@ activity_plot <- hourly_data %>%
        y = "Activity Level",
        color = "Gender") +
   scale_x_continuous(breaks = 0:24) +  # Set breaks for 0 to 24 (military time)
-  theme_minimal() 
+  theme_minimal() +
+  theme(legend.position = "bottom")
 
 activity_plot
 ```
