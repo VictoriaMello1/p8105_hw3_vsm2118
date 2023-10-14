@@ -96,10 +96,10 @@ instacart |>
   knitr::kable(digits = 2)
 ```
 
+
 ## Problem 2
 
-
-Data Cleaning
+##### Data Cleaning
 ```{r}
 data("brfss_smart2010")
 
@@ -115,7 +115,7 @@ variable.names(brfss_data_cleaned)
 ```
 
 
-In 2002 and 2010, which states were observed at 7 or more locations?
+##### In 2002 and 2010, which states were observed at 7 or more locations?
 ```{r}
 
 # States observed at 7 or more locations in 2002
@@ -142,7 +142,7 @@ knitr::kable(states_2010, caption =  "States with 7 or more observations in 2010
 In 2002 a total of 36 states were observed at 7 or more locations. The states observed at the most locations in 2002 were PA with 40, followed by MA and NJ both having 32. By 2010, the total number of states observed at 7 or more locations increased to 45. The states observed at the most locations in 2010 were FL with 164, followed by NJ with 76, and TX with 64 locations.
 
 
-Dataset limited to Excellent responses and a spaghetti plot:
+##### Dataset limited to Excellent responses and a spaghetti plot:
 ```{r}
 
 excellent_avg <- brfss_data_cleaned %>%
@@ -158,11 +158,12 @@ excellent_avg <- brfss_data_cleaned %>%
   ) +
   theme_minimal()
 
+excellent_avg
 ```
-The plot provides a useful tool for visualizing and comparing trends in the average data value of "Excellent" responses between states over time. It allows for a comparison between states over the years 2002 to 2010. However, due to there being 50 states, the plot is quite busy and it is challenging to distinguish between the lines of individual states. One observation that can be made from the plot is that most states appear to be following a similar fluctuating trend for the average "Excellent" responses to the "Overall Health" topic over time. However, without specific data points or a clearer view, it's difficult to make more detailed observations or conclusions.
+The plot provides a useful tool for visualizing and comparing trends in the average data value of "Excellent" responses between states over time. It allows for a comparison between states over the years 2002 to 2010. The average data value is represented by the y-axis and the range of the graph on the y-axis is 10%-35%. Year is represented on the x-axis with a range of 2002-2010. However, due to there being 50 states, the plot is quite busy and it is challenging to distinguish between the lines of individual states. One observation that can be made from the plot is that most states appear to be following a similar fluctuating trend for the average "Excellent" responses to the "Overall Health" topic over time. However, without specific data points or a clearer view, it's difficult to make more detailed observations or conclusions.
 
 
-Two-panel scatterplot showing the distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State in the years 2006 and 2010:
+##### Two-panel scatterplot showing the distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State in the years 2006 and 2010:
 ```{r}
 # Filter the dataset to include only NY State and the years 2006 and 2010
 ny_data <- brfss_data_cleaned %>%
@@ -184,8 +185,7 @@ plot_combined <- ggplot(ny_data, aes(x = response, y = data_value, color = locat
 
 plot_combined
 ```
-As seen in the two panel scatterplot showing the distribution of data_value for responses (“Poor” to “Excellent”) among counties in NY State for the years 2006 and 2010, the "Good" response option to the question "How is your general health?" was the most common response, followed by "Excellent", "Fair", and "Poor" in both years. Data from 2010 has information on a greater number of NY counties than the 2006 dataset does, including information for these additional counties: Bronx, Erie, and Monroe counties. 
-#### Finish comment with which NY counties had highest vs lowest general health in each year
+As seen in the two panel scatterplot showing the distribution of data_value for responses (“Poor” to “Excellent”) among counties in NY State for the years 2006 and 2010, the "Good" response option to the question "How is your general health?" was the most common response, followed by "Excellent", "Fair", and "Poor" in both years. Data from 2010 has information on a greater number of NY counties than the 2006 dataset does, including information for these additional counties: Bronx, Erie, and Monroe counties. In 2006, the county with the highest distribution of "Excellent" health was New York County, whereas in 2010 it was Westchester county. In 2006, the county with the highest distribution of "Poor" health was also New York County, although in 2010 it was Kings county. 
 
 
 ## Problem 3 
@@ -229,7 +229,7 @@ View(joined_data)
 ```
 
 
-Table for the number of men and women in each education category, and a visualization of age distributions for men and women across education categories:
+##### Table for the number of men and women in each education category, and a visualization of age distributions for men and women across education categories:
 ```{r}
 # Create sex v education table
 education_summary <- joined_data %>%
@@ -260,10 +260,11 @@ age_distribution_plot <- joined_data %>%
 education_summary
 age_distribution_plot
 ```
- -- COMMENT On table and plot 
+The table illustrates the distribution of participants based on their education level and gender. This table offers insights into the number of participants in each education level, categorized by their gender. For individuals with "less than high school" education, there are 27 male participants and 28 female participants. In the "high school equivalent" education group, there are 35 male participants and 23 female participants. Among those with "more than high school" education, there are 56 male participants and 59 female participants. Looking at the plot of age distributions for men and women across education categories, it appears that the age distribution for both men and women in the "less than high school" category is wide, however, the distribution for women appears to be slightly more skewed towards older ages compared to men. In the "high school equivalent" category, the age distribution for both genders is broad, but the peak for women seems to be at a slightly older age than for men. Finally, in the "more than high school" category, the peak for women is at a younger age compared to men, indicating that women are more likely to complete higher education at a younger age than men
 
 
-Plot of total activity by age, sex, and education level:
+
+##### Plot of total activity by age, sex, and education level:
 ```{r}
 activity_total =
   joined_data %>% 
@@ -285,10 +286,10 @@ total_activity_plot <- ggplot(activity_total, aes(x = age, y = total_activity)) 
 
 total_activity_plot
 ```
--- COMMENT on results
+Based on the scatter plot of total activity by age, sex, and education level, it appears that total activity for both genders tends to decrease with age across all education categories. Women tend to have higher total activity than men in the younger age groups, especially in the "less than high school" category. The "less than high school" category shows higher total activity for both genders compared to the other categories, especially for the younger age groups. Finally, the steepness of the graph trendlines suggests that people with less education tend to have less physical activity with increasing age. Specifically, the "less than high school" category shows a steeper decline in total activity with increasing age compared to the other categories, indicating that people with less education may be more susceptible to physical inactivity as they age
 
 
-Three-panel plot that shows the 24-hour activity time courses for each education level and by sex:
+##### Three-panel plot that shows the 24-hour activity time courses for each education level and by sex:
 ```{r}
 # Reshape the data into long format
 hourly_data <- joined_data %>%
@@ -311,6 +312,6 @@ hourly_data %>%
   theme_minimal()
 
 hourly_data
-```
--- COMMENT on results
 
+```
+Based on the results of the three-panel plot showing the 24-hour activity time courses for each education level by sex, it seems that overall, males have higher mean activity levels than females at every hour of the day. The only exception is for the "less than high school" group where the female mean activity level trend line is higher than that of males during the late afternoon and early evening hours. Additionally, individuals with more than a high school education have higher mean activity levels throughout the day compared to those with lower levels of education. Generally, it seems that mean activity levels are highest in the morning (around 8-10am) and gradually decrease throughout the day, with the lowest levels around 8-10pm.
