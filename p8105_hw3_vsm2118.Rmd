@@ -173,7 +173,7 @@ custom_colors <- c("NY - Bronx County" = "black", "NY - Erie County" = "blue", "
 
 # Create the scatter plot for 2006 and 2010 and facet by year
 plot_combined <- ggplot(ny_data, aes(x = response, y = data_value, color = locationdesc)) +
-  geom_point(size = 3, alpha = 0.6, position = position_jitter(w = 0.2, h = 0)) +  # Adjust size and jitter
+  geom_point(size = 3, alpha = 0.6, position = position_jitter(w = 0.2, h = 0)) +   
   scale_color_manual(values = custom_colors) +  # Use the custom color palette
   labs(title = "Distribution of Data Value by Location in New York State",
        x = "Response",
@@ -189,60 +189,57 @@ As seen in the two panel scatterplot showing the distribution of data_value for 
 
 
 ## Problem 3 
-
 ```{r}
 # Load demographic data
 demographics <- read.csv("nhanes_covar.csv", skip = 4)
 view(demographics)
 
 # Load accelerometer data
-accelerometer <- read.csv("nhanes_accel.csv")
+accelerometer <- read.csv("nhanes_accel.csv") %>% 
+  janitor::clean_names()
 view(accelerometer)
 
 # Tidy demographic data
-demographics <- demographics %>%
+demographics_clean <- demographics %>%
   janitor::clean_names() %>%
   drop_na() %>%
   filter(age >= 21) %>%
   mutate(education = case_when(
-    education == 1 ~ "Less than high school",
-    education == 2 ~ "High school equivalent",
-    education == 3 ~ "More than high school"
+    education == 1 ~ "less than high school",
+    education == 2 ~ "high school equivalent",
+    education == 3 ~ "more than high school"
   ),
   sex = case_when(
-    sex == 1 ~ "Male",
-    sex == 2 ~ "Female"
+    sex == 1 ~ "male",
+    sex == 2 ~ "female"
   ))
 view(demographics)
 
-# Tidy accelerometer data -- FIX THIS !!!
-reshaped_accelerometer <- accelerometer %>%
-  janitor::clean_names() %>% 
-  pivot_longer(
-    cols = starts_with("min"),
-    names_to = "minute",
-    values_to = "activity_level"
-  ) %>%
-  mutate(minute = as.integer(gsub("min", "", minute)))
+# Tidy accelerometer data and inner join
+ joined_data = 
+  accelerometer %>% 
+  inner_join(demographics_clean, by = "seqn") %>% 
+  relocate(seqn, sex, age, bmi, education) %>% 
+  filter(age >= 21) %>% 
+  mutate(
+    sex = forcats::fct_relevel(sex, "male", "female"),
+    education = forcats::fct_relevel(education, "less than high school", "high school equivalent", "more than high school"))
 
-
-# Merge the reshaped accelerometer data with the demographics dataset using SEQN
-merged_data <- demographics %>%
-  inner_join(reshaped_accelerometer, by = "seqn")
-
-view(merged_data)
+View(joined_data)
 ```
 
 
 Table for the number of men and women in each education category, and a visualization of age distributions for men and women across education categories:
 ```{r}
 # Create sex v education table
-education_summary <- merged_data %>%
+education_summary <- joined_data %>%
   group_by(education, sex) %>%
   summarize(
     count = n()
   ) %>%
   ungroup() 
+
+knitr::kable(education_summary, caption =  "Number of Men and Women in each Education Category", format = "markdown")
 
 # Bar chart depicting table 
 education_summary %>%
@@ -252,7 +249,7 @@ education_summary %>%
   theme_minimal()
 
 # Create a histogram for age distributions by gender and education category
-age_distribution_plot <- merged_data %>%
+age_distribution_plot <- joined_data %>%
   ggplot(aes(x = age, fill = sex)) +
   geom_histogram(binwidth = 5, position = "dodge") +
   facet_grid(sex ~ education) +
@@ -268,13 +265,15 @@ age_distribution_plot
 
 Plot of total activity by age, sex, and education level:
 ```{r}
-# Aggregate total activity for each participant
-total_activity <- merged_data %>%
-  group_by(seqn, age, sex, education) %>%
-  summarise(total_activity = sum(activity_level))
-
+activity_total =
+  joined_data %>% 
+  rowwise() %>% 
+  mutate(
+    total_activity = sum(c_across(min1:min1440)) %>% 
+    as.numeric())
+        
 # Plot total activity by age, gender, and education level
-total_activity <- ggplot(total_activity, aes(x = age, y = total_activity)) +
+total_activity_plot <- ggplot(activity_total, aes(x = age, y = total_activity)) +
   geom_point(aes(color = sex)) +
   facet_wrap(~education) +
   geom_smooth(method = "lm", se = FALSE, color = "black") +
@@ -284,32 +283,34 @@ total_activity <- ggplot(total_activity, aes(x = age, y = total_activity)) +
        color = "Gender") +
   theme_minimal()
 
-total_activity
+total_activity_plot
 ```
 -- COMMENT on results
 
 
 Three-panel plot that shows the 24-hour activity time courses for each education level and by sex:
 ```{r}
-# Aggregate the data to an hourly level
-hourly_data <- merged_data %>%
-  group_by(education, sex, hour = minute %/% 60) %>%
-  summarize(activity_level = mean(activity_level)) 
+# Reshape the data into long format
+hourly_data <- joined_data %>%
+  pivot_longer(cols = starts_with("min"), names_to = "minute", values_to = "activity") %>%
+  mutate(
+    minute = as.numeric(gsub("min", "", minute)),  # Extract minute number
+    hour = (minute - 1) %/% 60  # Calculate the hour
+  ) %>%
+  group_by(education, sex, hour) %>%
+  summarize(mean_activity = mean(activity)) %>%
+  ungroup()
 
-# Create the 24-hour activity time course plot
-activity_plot <- hourly_data %>%
-  ggplot(aes(x = hour, y = activity_level, color = sex)) +
+# Create the three-panel plot
+hourly_data %>%
+  ggplot(aes(x = hour, y = mean_activity, color = sex)) +
   geom_line() +
-  facet_wrap(~education) +  # 3 panels, one for each education level
-  labs(title = "24-Hour Activity Time Courses by Education Level",
-       x = "Hour of the Day",
-       y = "Activity Level",
-       color = "Gender") +
-  scale_x_continuous(breaks = 0:24) +  # Set breaks for 0 to 24 (military time)
-  theme_minimal() +
-  theme(legend.position = "bottom",
-        axis.text.x = element_text(size = 8))
+  geom_smooth(method = "lm", se = FALSE, size = 1) +  
+  facet_wrap(~education, scales = "free") +
+  labs(x = "Hour of the Day", y = "Mean Activity Level") +
+  theme_minimal()
 
-activity_plot
+hourly_data
 ```
 -- COMMENT on results
+
